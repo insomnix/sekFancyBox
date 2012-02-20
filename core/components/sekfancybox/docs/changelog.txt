@@ -1,0 +1,9 @@
+SEKFancyBox 0.0.2
+====================================
+- Added setting sekfancybox.load_jquery
+- Added option &loadjquery
+- Moved javascript to load at body end
+
+SEKFancyBox 0.0.0
+====================================
+- Addon Created
