@@ -19,7 +19,6 @@
  *
  * @package sekfancybox
  */
-
 class sekFancyBoxModalController extends sekFancyBoxController {
     /**
      * Initialize this controller, setting up default properties
@@ -30,7 +29,7 @@ class sekFancyBoxModalController extends sekFancyBoxController {
 		$this->setDefaultProperties(array(
             'modalwidth' => '400',
             'type' => 'inline',
-            'linkname' => 'sekfancybox',
+            'link' => '',
 			'modalclass' => 'fancybox',
 			'group' => '',
 			'mousewheel' => '0',
@@ -38,9 +37,8 @@ class sekFancyBoxModalController extends sekFancyBoxController {
 			'thumbnailhelper' => '0',
 			'customjs' => '',
 			'customcss' => '',
-			'loadjquery' => $loadjquery,
+			'loadjquery' => $loadjquery
         ));
-				
     }
 
     public function process() {
@@ -71,16 +69,23 @@ class sekFancyBoxModalController extends sekFancyBoxController {
 		// optional, set the modal class
 		$modalclass = $this->getProperty('modalclass');
 		
-        $this->loadStartupScripts();
+        $scriptReturned = $this->loadStartupScripts();
 		
 		$output = '';
 		
 		$title = ($title > '') ? '" title="'.$title.'"' : '';
 		
         switch ($type) {
+            case 'jcode':
+                if($link>''){
+                    $output = '$("#'.$link.'").fancybox('.$scriptReturned.');';
+                }else{
+                    $output = '$.fancybox(\''.$text.'\''.($scriptReturned>''?','.$scriptReturned:'').');';
+                }
+                break;
             case 'media':
-				$group = ($group > '') ? '" data-fancybox-group="'.$group.'"' : '';	
-				$output = '<a class="'.$modalclass.'"'.$group.' href="'.$link.'"'.$title.'>'.$linktext.'</a>';
+                $group = ($group > '') ? '" data-fancybox-group="'.$group.'"' : '';
+                $output = '<a class="'.$modalclass.'"'.$group.' href="'.$link.'"'.$title.'>'.$linktext.'</a>';
                 break;
             case 'document':
 				$output = '<a class="'.$modalclass.' fancybox.ajax" href="'.$link.'"'.$title.'>'.$linktext.'</a>';
@@ -90,6 +95,7 @@ class sekFancyBoxModalController extends sekFancyBoxController {
                 break;
             case 'inline':
             default:
+                $link = $link>''?$link:'sekfancybox';
 				$output = '<div style="display: none;">';
 				$output .= '<div id="'.$link.'" style="width:'.$width.'px;">';
 				$output .= ($header > '') ? '<h3>'.$header.'</h3>' : '';
@@ -108,89 +114,187 @@ class sekFancyBoxModalController extends sekFancyBoxController {
      * @return void
      */
     public function loadStartupScripts() {
+        // config settings
+        $assetsUrl = $this->sekfancybox->config['assetsUrl'];
+
 		// optional, helpers
 		$mousewheel = $this->getProperty('mousewheel');
-		$buttonhelper = $this->getProperty('buttonhelper');
+        $buttonhelper = $this->getProperty('buttonhelper');
+        $mediahelper = $this->getProperty('mediahelper');
 		$thumbnailhelper = $this->getProperty('thumbnailhelper');
+
+        // custom options
 		$customjs = $this->getProperty('customjs');
-		$customcss = $this->getProperty('customcss');
+        $customcss = $this->getProperty('customcss');
+        $custombuttonscss = $this->getProperty('custombuttonscss');
+        $customthumbnailcss = $this->getProperty('customthumbnailcss');
 		$loadjquery = $this->getProperty('loadjquery');
 
-		if($loadjquery == '1'){
-			$this->modx->regClientScript($this->sekfancybox->config['assetsUrl'].'lib/jquery-1.7.1.min.js');
-		}
-		
-		$src = '';
+        // load jquery if the system setting or option says to load it
+        $loadjquery = ($loadjquery>'')?$loadjquery:$this->modx->getOption('sekfancybox.load_jquery',null,1);
+        if($loadjquery == 1){
+            if($this->modx->getOption('sekfancybox.load_jquery',null,1) == 1){
+                $this->modx->regClientStartupScript($assetsUrl.'lib/jquery-1.8.3.min.js');
+            }else{
+                $this->modx->regClientScript($assetsUrl.'lib/jquery-1.8.3.min.js');
+            }
+        }
 		
 		// Add mousewheel plugin (this is optional)
 		if($mousewheel == '1'){
-			$this->modx->regClientScript($this->sekfancybox->config['assetsUrl'].'lib/jquery.mousewheel-3.0.6.pack.js');
+			$this->modx->regClientScript($assetsUrl.'lib/jquery.mousewheel-3.0.6.pack.js');
 		}
 
-		// Add fancyBox main JS and CSS files 
-		$this->modx->regClientScript($this->sekfancybox->config['assetsUrl'].'source/jquery.fancybox.js');
-		$this->modx->regClientCSS($this->sekfancybox->config['assetsUrl'].'source/jquery.fancybox.css');
+		// Add fancyBox main JS file
+		$this->modx->regClientScript($assetsUrl.'source/jquery.fancybox.pack.js?v=2.1.3');
 
-		// Add Button helper (this is optional)
-		if($buttonhelper == '1'){
-			$this->modx->regClientCSS($this->sekfancybox->config['assetsUrl'].'source/helpers/jquery.fancybox-buttons.css?v=2.0.3');
-			$this->modx->regClientScript($this->sekfancybox->config['assetsUrl'].'source/helpers/jquery.fancybox-buttons.js?v=2.0.3');
-			$src = '{
-				prevEffect		: \'none\',
-				nextEffect		: \'none\',
-				closeBtn		: false,
-				helpers : {	
-					title	: { 
-						type : \'inside\' 
-					}, 
-					buttons	: {} 
-				}
-			}';
-		}
+        // Add fancyBox css or custom css file
+        $customcss = ($customcss>'')?$customcss:($this->modx->getOption('sekfancybox.custom_css')>'')?$this->modx->getOption('sekfancybox.custom_css'):$assetsUrl.'source/jquery.fancybox.css?v=2.1.3';
+        $this->modx->regClientCSS($customcss);
 
-		// Add Thumbnail helper (this is optional)
-		if($thumbnailhelper == '1'){
-			$this->modx->regClientCSS($this->sekfancybox->config['assetsUrl'].'source/helpers/jquery.fancybox-thumbs.css?v=2.0.3');
-			$this->modx->regClientScript($this->sekfancybox->config['assetsUrl'].'source/helpers/jquery.fancybox-thumbs.js?v=2.0.3');
-			$src = '{
-				prevEffect	: \'none\',
-				nextEffect	: \'none\',
-				helpers	: {
-					title	: {
-						type: \'outside\'
-					},
-					overlay	: {
-						opacity : 0.8,
-						css : {
-							\'background-color\' : \'#000\'
-						}
-					},
-					thumbs	: {
-						width	: 50,
-						height	: 50
-					}
-				}
-			}';
-		}
+        // Add Button helper (this is optional)
+        if($buttonhelper == '1'){
+            $custombuttonscss = ($custombuttonscss>'')?$custombuttonscss:($this->modx->getOption('sekfancybox.custom_buttons_css')>'')?$this->modx->getOption('sekfancybox.custom_buttons_css'):$assetsUrl.'source/helpers/jquery.fancybox-buttons.css?v=1.0.5';
+            $this->modx->regClientCSS($custombuttonscss);
 
-		// optional, width of modal box, if not set defaults to '400'
-        $type = $this->getProperty('type','');
-		
-		if($customcss > ''){
-			$this->modx->regClientCSS($customcss);
-		}
-
-		if($customjs > ''){
-			$src = $customjs;
-		}else{
-			$src = '<script type="text/javascript">
-						$(document).ready(function() {
-							$(\'.'.$this->getProperty('modalclass').'\').fancybox('.$src.');
-						});
-					</script>';
+            $this->modx->regClientScript($assetsUrl.'source/helpers/jquery.fancybox-buttons.js?v=1.0.5');
+            if($this->getProperty('helpers')>''){
+                $helperProperties = $this->modx->fromJSON($this->getProperty('helpers'));
+                if(!array_key_exists('buttons', $helperProperties)) {
+                    $itemOptions[] = 'buttons:{}';
+                }
+            }else{
+                $itemOptions[] = 'buttons:{}';
+            }
         }
 
-		$this->modx->regClientScript($src);
+        // Add Media helper (this is optional)
+        if($mediahelper == '1'){
+            $this->modx->regClientScript($assetsUrl.'source/helpers/jquery.fancybox-media.js?v=1.0.5');
+        }
+
+        // Add Thumbnail helper (this is optional)
+        if($thumbnailhelper == '1'){
+            $customthumbnailcss = ($customthumbnailcss>'')?$customthumbnailcss:($this->modx->getOption('sekfancybox.custom_thumbs_css')>'')?$this->modx->getOption('sekfancybox.custom_thumbs_css'):$assetsUrl.'source/helpers/jquery.fancybox-thumbs.css?v=1.0.7';
+            $this->modx->regClientCSS($customthumbnailcss);
+
+            $this->modx->regClientScript($assetsUrl.'source/helpers/jquery.fancybox-thumbs.js?v=1.0.7');
+            if($this->getProperty('helpers')>''){
+                $helperProperties = $this->modx->fromJSON($this->getProperty('helpers'));
+                if(!array_key_exists('thumbs', $helperProperties)) {
+                    $itemOptions[] = 'thumbs:{}';
+                }
+            }else{
+                $itemOptions[] = 'thumbs:{}';
+            }
+        }
+
+        // build options for fancybox
+        $jsOptions = array();
+        foreach($this->getProperties() as $key=>$value){
+            switch($key){
+                case 'scrolling':
+                case 'width':
+                case 'height':
+                case 'wrapCSS':
+                case 'prevEffect':
+                case 'nextEffect':
+                case 'openEffect':
+                case 'closeEffect':
+                case 'openSpeed':
+                case 'closeSpeed':
+                case 'nextSpeed':
+                case 'prevSpeed':
+                case 'openEasing':
+                case 'closeEasing':
+                case 'nextEasing':
+                case 'prevEasing':
+                case 'openMethod':
+                case 'closeMethod':
+                case 'nextMethod':
+                case 'prevMethod':
+                case 'scrollOutside':
+                    if(!(is_numeric($value) || $value=='null' || $value=='true' || $value=='false')){$value='\''.$value.'\'';}
+                    $jsOptions[] = $key.':'.$value;
+                    break;
+                case 'padding':
+                case 'margin':
+                case 'minWidth':
+                case 'minHeight':
+                case 'maxWidth':
+                case 'maxHeight':
+                case 'autoWidth':
+                case 'autoResize':
+                case 'autoCenter':
+                case 'fitToView':
+                case 'aspectRatio':
+                case 'topRatio':
+                case 'leftRatio':
+                case 'autoSize':
+                case 'autoHeight':
+                case 'arrows':
+                case 'closeBtn':
+                case 'closeClick':
+                case 'nextClick':
+                case 'mouseWheel':
+                case 'autoPlay':
+                case 'playSpeed':
+                case 'preload':
+                case 'modal':
+                case 'loop':
+                case 'openOpacity':
+                case 'closeOpacity':
+                    $jsOptions[] = $key.':'.$value;
+                    break;
+                case 'helpers':
+                    foreach ($this->modx->fromJSON($value) as $hkey=>$hvalue) {
+                        //$this->modx->log(modX::LOG_LEVEL_ERROR,'[sekFancyBox] : '.print_r($hvalue,false));
+                        if(is_array($hvalue)){
+                            foreach ($hvalue as $subkey=>$subvalue) {
+                                if(is_array($subvalue)){
+                                    foreach ($subvalue as $subbkey=>$subbvalue) {
+                                        if(!(is_numeric($subbvalue) || $subbvalue=='null' || $subbvalue=='true' || $subbvalue=='false')){$subbvalue='\''.$subbvalue.'\'';}
+                                        $subbItemOptions[] = $subbkey.':'.$subbvalue;
+                                    }
+                                    $subItemOptions[] = $subkey.':{'.implode(',',$subbItemOptions).'}';
+                                    unset($subbItemOptions);
+                                }else{
+                                    if(!(is_numeric($subvalue) || $subvalue=='null' || $subvalue=='true' || $subvalue=='false')){$subvalue='\''.$subvalue.'\'';}
+                                    $subItemOptions[] = $subkey.':'.$subvalue;
+                                }
+                            }
+                            $itemOptions[] = $hkey.':{'.implode(',',$subItemOptions).'}';
+                            unset($subItemOptions);
+                        }else{
+                            if(!(is_numeric($hvalue) || $hvalue=='null' || $hvalue=='true' || $hvalue=='false')){$hvalue='\''.$hvalue.'\'';}
+                            $itemOptions[] = $hkey.':'.$hvalue;
+                        }
+                    }
+
+                    $jsOptions[] = $key.':{'.implode(',',$itemOptions).'}';
+                    unset($itemOptions);
+                    break;
+            }
+
+        }
+        // set js src
+        $src = implode(',',$jsOptions);
+        $return = '';
+
+		if($customjs > ''){
+            $this->modx->regClientScript($customjs);
+		}elseif($this->getProperty('type') == 'jcode'){
+            $return = ($src>''?'{'.$src.'}':'');
+        }else{
+			$src = '<script type="text/javascript">
+						$(document).ready(function() {
+							$(\'.'.$this->getProperty('modalclass').'\').fancybox('.($src>''?'{'.$src.'}':'').');
+						});
+					</script>';
+            $this->modx->regClientScript($src);
+        }
+
+		return $return;
     }
 
 }

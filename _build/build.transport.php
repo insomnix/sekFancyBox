@@ -19,7 +19,6 @@
  *
  * @package sekfancybox
  */
- 
 $tstart = explode(' ', microtime());
 $tstart = $tstart[1] + $tstart[0];
 set_time_limit(0);
@@ -27,8 +26,8 @@ set_time_limit(0);
 /* define package names */
 define('PKG_NAME','sekFancyBox');
 define('PKG_NAME_LOWER','sekfancybox');
-define('PKG_VERSION','0.0.2');
-define('PKG_RELEASE','BETA');
+define('PKG_VERSION','1.0.0');
+define('PKG_RELEASE','pl');
  
 /* define build paths */
 //    'lexicon' => $root . 'core/components/'.PKG_NAME_LOWER.'/lexicon/',

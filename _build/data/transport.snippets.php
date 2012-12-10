@@ -19,7 +19,6 @@
  *
  * @package sekfancybox
  */
- 
 function getSnippetContent($filename) {
     $o = file_get_contents($filename);
     $o = trim(str_replace(array('<?php','?>'),'',$o));
@@ -34,8 +33,4 @@ $snippets[1]->fromArray(array(
     'description' => 'Display data, images, flash, web pages, or anything else in an easy to use modal window.',
     'snippet' => getSnippetContent($sources['elements'].'snippets/snippet.sekfancybox.php'),
 ),'',true,true);
-/*$properties = include $sources['data'].'properties/properties.sekfancybox.php';
-$snippets[1]->setProperties($properties);
-unset($properties);
-*/
 return $snippets;

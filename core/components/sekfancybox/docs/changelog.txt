@@ -1,9 +1,17 @@
-SEKFancyBox 0.0.2
+sekFancyBox 1.0.0
+====================================
+- Added multiple custom_css settings
+- Updated jQuery to 1.8.3
+- Updated fancyBox to 2.1.3
+- Added jcode type
+- Added several fancyBox options
+
+sekFancyBox 0.0.2
 ====================================
 - Added setting sekfancybox.load_jquery
 - Added option &loadjquery
 - Moved javascript to load at body end
 
-SEKFancyBox 0.0.0
+sekFancyBox 0.0.0
 ====================================
 - Addon Created

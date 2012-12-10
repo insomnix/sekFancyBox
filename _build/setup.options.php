@@ -19,28 +19,11 @@
  *
  * @package sekfancybox
  */
-$s = array(
-    'load_jquery' => true,
-    'load_jquery_head' => true,
-    'custom_css' => '',
-    'custom_buttons_css' => '',
-    'custom_thumbs_css' => '',
-);
-
-$settings = array();
-foreach ($s as $key => $value) {
-    if (is_string($value) || is_int($value)) { $type = 'textfield'; }
-    elseif (is_bool($value)) { $type = 'combo-boolean'; }
-    else { $type = 'textfield'; }
-
-    $settings['sekfancybox.'.$key] = $modx->newObject('modSystemSetting');
-    $settings['sekfancybox.'.$key]->set('key', 'sekfancybox.'.$key);
-    $settings['sekfancybox.'.$key]->fromArray(array(
-        'value' => $value,
-        'xtype' => $type,
-        'namespace' => 'sekfancybox',
-        'area' => ''
-    ));
+$output = '';
+switch ($options[xPDOTransport::PACKAGE_ACTION]) {
+    case xPDOTransport::ACTION_INSTALL:
+    case xPDOTransport::ACTION_UPGRADE:		
+    case xPDOTransport::ACTION_UNINSTALL:
+        break;
 }
-
-return $settings;
+return $output;

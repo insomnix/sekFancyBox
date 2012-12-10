@@ -19,7 +19,6 @@
  *
  * @package sekfancybox
  */
-
 class sekFancyBox {
     public $modx;
     public $config = array();
@@ -105,5 +104,4 @@ class sekFancyBox {
         }
         return $this->controller;
     }
-	
 }
